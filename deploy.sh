@@ -832,7 +832,7 @@ services:
         soft: 65535
         hard: 65535
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/healthz"]
+      test: ["CMD", "sh", "-c", "wget -qO /dev/null http://localhost:8080/healthz"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -932,7 +932,7 @@ USER dsvpn
 EXPOSE 8080
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/healthz || exit 1
+    CMD wget -qO /dev/null http://localhost:8080/healthz || exit 1
 
 ENTRYPOINT ["/app/dsvpn-server"]
 DFILE
