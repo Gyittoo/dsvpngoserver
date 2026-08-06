@@ -21,6 +21,9 @@ REQUIRED_GO_MAJOR=1
 REQUIRED_GO_MINOR=22
 PG_VERSION=16
 
+# Capture the script's real directory NOW, before any cd commands
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # ================================================================
 #  COLORS & LOGGING
 # ================================================================
@@ -182,15 +185,14 @@ step_03_go() {
 
     if [[ "$NEED_INSTALL" == true ]]; then
         info "Downloading Go ${GO_VERSION} from go.dev..."
-        cd /tmp
-        wget -q --show-progress "${GO_URL}" -O "${GO_TARBALL}"
+        wget -q --show-progress "${GO_URL}" -O "/tmp/${GO_TARBALL}"
         ok "Downloaded ${GO_TARBALL}"
 
         info "Removing old Go installation (if any)..."
         rm -rf /usr/local/go
 
         info "Extracting to /usr/local/go..."
-        tar -C /usr/local -xzf "${GO_TARBALL}"
+        tar -C /usr/local -xzf "/tmp/${GO_TARBALL}"
         rm -f "/tmp/${GO_TARBALL}"
 
         # Add to PATH system-wide (persists across reboots)
@@ -478,8 +480,9 @@ step_07_project_setup() {
 
     mkdir -p "${PROJECT_DIR}"
     info "Project directory: ${PROJECT_DIR}"
+    info "Source directory : ${SCRIPT_DIR}"
 
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    # SCRIPT_DIR was captured at the top of the script, before any cd commands
 
     # Copy source code to project dir if not already there
     if [[ "$SCRIPT_DIR" != "$PROJECT_DIR" ]]; then
@@ -488,11 +491,8 @@ step_07_project_setup() {
             --exclude='.git' \
             --exclude='bin/' \
             --exclude='*.exe' \
-            --exclude='deploy.sh' \
             "${SCRIPT_DIR}/" "${PROJECT_DIR}/" 2>/dev/null || \
         cp -r "${SCRIPT_DIR}"/* "${PROJECT_DIR}/" 2>/dev/null || true
-        # Also copy deploy.sh itself
-        cp "${SCRIPT_DIR}/deploy.sh" "${PROJECT_DIR}/deploy.sh" 2>/dev/null || true
         ok "Source code copied to ${PROJECT_DIR}"
     else
         ok "Already running from project directory ✓"
