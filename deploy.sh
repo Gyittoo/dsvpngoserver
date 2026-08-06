@@ -892,12 +892,12 @@ step_13_dockerfile() {
     cat > "${PROJECT_DIR}/Dockerfile" << 'DFILE'
 # ============================================================
 #  DSVPN Backend — Multi-stage Production Build
-#  Stage 1: Build Go binary (golang:1.22-alpine)
+#  Stage 1: Build Go binary (golang:1-alpine — matches go.mod)
 #  Stage 2: Run in minimal image (alpine:3.20)
 # ============================================================
 
 # ---- Build Stage ----
-FROM golang:1.22-alpine AS builder
+FROM golang:1-alpine AS builder
 
 RUN apk add --no-cache git ca-certificates
 
@@ -938,7 +938,7 @@ ENTRYPOINT ["/app/dsvpn-server"]
 DFILE
 
     ok "Dockerfile written ✓"
-    info "  Stage 1: golang:1.22-alpine (build)"
+    info "  Stage 1: golang:1-alpine (build)"
     info "  Stage 2: alpine:3.20 (production, non-root user)"
     info "  Health : wget /healthz every 10s"
 }
