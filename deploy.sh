@@ -638,6 +638,8 @@ step_10_ssl_cert() {
     mkdir -p "$CERT_DIR"
 
     if [[ -f "$CERT_PEM" ]]; then
+        # Ensure permissions are correct (HAProxy runs as non-root user inside container)
+        chmod 644 "$CERT_PEM"
         ok "SSL certificate already exists at ${CERT_PEM} ✓"
         info "To regenerate: delete the file and re-run deploy.sh"
         return
@@ -658,7 +660,7 @@ step_10_ssl_cert() {
 
     # HAProxy requires combined PEM file (cert + key in one file)
     cat "${CERT_DIR}/temp.crt" "${CERT_DIR}/temp.key" > "$CERT_PEM"
-    chmod 600 "$CERT_PEM"
+    chmod 644 "$CERT_PEM"
     rm -f "${CERT_DIR}/temp.crt" "${CERT_DIR}/temp.key"
 
     ok "Self-signed SSL certificate generated ✓"
@@ -668,6 +670,7 @@ step_10_ssl_cert() {
     info "  1. Cloudflare Dashboard → SSL/TLS → Origin Server"
     info "  2. Click 'Create Certificate'"
     info "  3. Save cert+key combined into: ${CERT_PEM}"
+    info "  4. chmod 644 ${CERT_PEM}"
 }
 
 # ================================================================
