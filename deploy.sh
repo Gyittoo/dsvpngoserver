@@ -560,12 +560,34 @@ step_09_credentials() {
 
     cd "${PROJECT_DIR}"
 
-    # Generate strong random passwords
+    # ── IMPORTANT: Reuse existing credentials if .env already exists ──
+    # PostgreSQL stores the password in its data volume on first run.
+    # If we generate a new password, it won't match the volume → crash.
+    if [[ -f "${PROJECT_DIR}/.env" ]]; then
+        EXISTING_DB_PASS=$(grep '^DB_PASSWORD=' "${PROJECT_DIR}/.env" 2>/dev/null | cut -d= -f2 || echo "")
+        EXISTING_JWT=$(grep '^JWT_SECRET=' "${PROJECT_DIR}/.env" 2>/dev/null | cut -d= -f2 || echo "")
+
+        if [[ -n "$EXISTING_DB_PASS" && -n "$EXISTING_JWT" ]]; then
+            GEN_DB_PASSWORD="$EXISTING_DB_PASS"
+            GEN_JWT_SECRET="$EXISTING_JWT"
+            ok "Existing .env found — reusing credentials ✓"
+            ok "  DB password  : ${GEN_DB_PASSWORD:0:8}... (preserved)"
+            ok "  JWT secret   : ${GEN_JWT_SECRET:0:12}... (preserved)"
+            warn "To reset credentials: delete ${PROJECT_DIR}/.env and the postgres volume"
+            warn "  docker volume rm dsvpn_postgres_data"
+
+            export GEN_DB_PASSWORD
+            export GEN_JWT_SECRET
+            return
+        fi
+    fi
+
+    # ── First deploy: generate new credentials ──
     GEN_DB_PASSWORD=$(openssl rand -base64 32 | tr -d '=/+' | head -c 32)
     GEN_JWT_SECRET=$(openssl rand -hex 32)
 
-    ok "Generated DB password  : ${GEN_DB_PASSWORD:0:8}... (32 chars)"
-    ok "Generated JWT secret   : ${GEN_JWT_SECRET:0:12}... (64 hex chars)"
+    ok "Generated NEW DB password  : ${GEN_DB_PASSWORD:0:8}... (32 chars)"
+    ok "Generated NEW JWT secret   : ${GEN_JWT_SECRET:0:12}... (64 hex chars)"
 
     # Write production .env file
     cat > "${PROJECT_DIR}/.env" << ENVEOF
