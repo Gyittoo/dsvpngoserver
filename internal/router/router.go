@@ -24,6 +24,7 @@ func New(db *pgxpool.Pool, authService *services.AuthService, googleClientID str
 	adminServerHandler := adminHandlers.NewServerAdminHandler(db)
 	adminVoucherHandler := adminHandlers.NewVoucherAdminHandler(db)
 	adminAnnouncementHandler := adminHandlers.NewAnnouncementAdminHandler(db)
+	appConfigHandler := adminHandlers.NewAppConfigHandler(db)
 
 	api := r.Group("/api/v1")
 	{
@@ -48,6 +49,9 @@ func New(db *pgxpool.Pool, authService *services.AuthService, googleClientID str
 			secured.GET("/announcements", announcementHandler.Active)
 			secured.POST("/connections/log", announcementHandler.LogConnection)
 		}
+
+		// Public app config (no auth required — client checks for updates)
+		api.GET("/app-config", appConfigHandler.Get)
 
 		admin := api.Group("/admin")
 		{
@@ -75,6 +79,9 @@ func New(db *pgxpool.Pool, authService *services.AuthService, googleClientID str
 				adminSecured.POST("/announcements", adminAnnouncementHandler.Create)
 				adminSecured.PUT("/announcements/:id", adminAnnouncementHandler.Update)
 				adminSecured.DELETE("/announcements/:id", adminAnnouncementHandler.Delete)
+
+				adminSecured.GET("/app-config", appConfigHandler.Get)
+				adminSecured.PUT("/app-config", appConfigHandler.Update)
 			}
 		}
 	}

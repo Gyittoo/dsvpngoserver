@@ -132,6 +132,7 @@ func (h *UserAdminHandler) Update(c *gin.Context) {
 		Plan        *string `json:"plan"`
 		IsActive    *bool   `json:"is_active"`
 		DataLimitMB *int    `json:"data_limit_mb"`
+		DataUsedMB  *int    `json:"data_used_mb"`
 		ExpiryDate  *string `json:"expiry_date"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -156,6 +157,11 @@ func (h *UserAdminHandler) Update(c *gin.Context) {
 	if req.DataLimitMB != nil {
 		setClauses = append(setClauses, fmt.Sprintf("data_limit_mb=$%d", argIdx))
 		args = append(args, *req.DataLimitMB)
+		argIdx++
+	}
+	if req.DataUsedMB != nil {
+		setClauses = append(setClauses, fmt.Sprintf("data_used_mb=$%d", argIdx))
+		args = append(args, *req.DataUsedMB)
 		argIdx++
 	}
 	if req.ExpiryDate != nil {
